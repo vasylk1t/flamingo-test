@@ -86,7 +86,7 @@ kubectl exec -it deploy/fleet-valkey -n fleet -- valkey-cli ping
 1. `wait-for-mysql` — waits for MySQL to accept connections
 2. `wait-for-redis` — waits for Valkey to accept connections
 3. `run-migrations` — executes `fleet prepare db --no-prompt`
-4. `fleet serve` — starts only after all above succeed
+4. `fleet server` — starts only after all above succeed
 
 ## Agent Connectivity
 
@@ -105,6 +105,20 @@ On every push to `main` that changes the chart, CI publishes to GHCR with two ta
 ```bash
 helm install fleet oci://ghcr.io/vasylk1t/flamingo-test/fleet --version 1.0.0
 ```
+
+## Configuration
+
+Deployment parameters can be changed via variables at the top of the `Makefile`:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CLUSTER_NAME` | `fleetdm-flamingo-local` | Kind cluster name |
+| `NAMESPACE` | `fleet` | Kubernetes namespace |
+| `RELEASE_NAME` | `fleet` | Helm release name |
+| `CHART_PATH` | `./fleet` | Path to local chart |
+| `CHART_REGISTRY` | `oci://ghcr.io/vasylk1t/flamingo-test/fleet` | Remote chart registry |
+| `CHART_VERSION` | `1.0.0` | Chart version for remote install |
+| `VALUES_FILE` | `values-local.yaml` | Values override file |
 
 ## Teardown
 
