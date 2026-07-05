@@ -2,10 +2,12 @@ CLUSTER_NAME    := fleetdm-flamingo-local
 NAMESPACE       := fleet
 RELEASE_NAME    := fleet
 CHART_PATH      := ./fleet
+CHART_REGISTRY  := oci://ghcr.io/vasylk1t/flamingo-test/fleet
+CHART_VERSION   := latest
 VALUES_FILE     := values-local.yaml
 KIND_CONFIG     := kind-config.yaml
 
-.PHONY: cluster install uninstall port-forward status help
+.PHONY: cluster install install-remote uninstall port-forward status help
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -20,7 +22,7 @@ cluster: ## Create local Kind cluster
 	fi
 	@kubectl cluster-info --context kind-$(CLUSTER_NAME)
 
-install: cluster ## Install the Helm chart
+install: cluster ## Install from local chart (default)
 	@helm repo add valkey https://valkey.io/valkey-helm/ 2>/dev/null || true
 	@helm dependency build $(CHART_PATH)
 	@kubectl create namespace $(NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
@@ -31,6 +33,17 @@ install: cluster ## Install the Helm chart
 		--timeout 10m
 	@echo ""
 	@echo "FleetDM deployed. Run 'make port-forward' to access UI at http://localhost:8080"
+
+install-remote: cluster ## Install from GHCR (use CHART_VERSION=<tag>)
+	@kubectl create namespace $(NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
+	helm upgrade --install $(RELEASE_NAME) $(CHART_REGISTRY) \
+		--version $(CHART_VERSION) \
+		--namespace $(NAMESPACE) \
+		--values $(VALUES_FILE) \
+		--wait \
+		--timeout 10m
+	@echo ""
+	@echo "FleetDM deployed ($(CHART_VERSION)). Run 'make port-forward' to access UI at http://localhost:8080"
 
 uninstall: ## Remove all deployed resources
 	@if helm status $(RELEASE_NAME) -n $(NAMESPACE) >/dev/null 2>&1; then \
