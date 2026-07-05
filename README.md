@@ -33,13 +33,12 @@ Check all components are running:
 kubectl get pods -n fleet
 ```
 
-All pods should be in `Running` state, migration job in `Completed`:
+All pods should be in `Running` state:
 
 ```
-fleet-<id>           1/1     Running     0     2m
-fleet-mysql-0        1/1     Running     0     2m
-fleet-valkey-<id>    1/1     Running     0     2m
-fleet-migration-<id> 0/1     Completed   0     2m
+fleet-<id>           1/1     Running   0     3m
+fleet-mysql-0        1/1     Running   0     3m
+fleet-valkey-<id>    1/1     Running   0     3m
 ```
 
 Verify FleetDM:
@@ -66,7 +65,15 @@ kubectl exec -it deploy/fleet-valkey -n fleet -- valkey-cli ping
 - **FleetDM Server** — device management platform (port 8080, TLS disabled for local dev)
 - **MySQL 8.4** — primary database (subchart)
 - **Valkey (Redis-compatible)** — cache layer (subchart)
-- **Migration Job** — runs `fleet prepare db --no-prompt` automatically on install
+
+### Database Migrations
+
+`fleet prepare db --no-prompt` runs automatically as an initContainer before the Fleet server starts. The pod startup sequence:
+
+1. `wait-for-mysql` — waits for MySQL to accept connections
+2. `wait-for-redis` — waits for Valkey to accept connections
+3. `run-migrations` — executes `fleet prepare db --no-prompt`
+4. `fleet serve` — starts only after all above succeed
 
 ## Agent Connectivity
 
