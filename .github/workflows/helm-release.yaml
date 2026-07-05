@@ -1,0 +1,51 @@
+name: Release Helm Chart
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "fleet/**"
+      - "values-local.yaml"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.0
+
+      - name: Lint chart
+        run: |
+          helm repo add valkey https://valkey.io/valkey-helm/
+          helm dependency build ./fleet
+          helm lint ./fleet --values values-local.yaml
+
+  release:
+    name: Push to GHCR
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.0
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build and push
+        run: |
+          helm repo add valkey https://valkey.io/valkey-helm/
+          helm dependency build ./fleet
+          helm package ./fleet
+          helm push fleet-*.tgz oci://ghcr.io/${{ github.repository_owner }}/flamingo-test

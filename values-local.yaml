@@ -1,0 +1,98 @@
+## Local development overrides for FleetDM Helm chart
+## Used with Kind cluster via `make install`
+
+hostName: fleet.localhost
+
+replicas: 1
+
+imageTag: v4.88.0
+
+resources:
+  limits:
+    cpu: 1
+    memory: 1Gi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+fleet:
+  listenPort: 8080
+  autoApplySQLMigrations: true
+  tls:
+    enabled: false
+  logging:
+    debug: false
+    json: true
+    disableBanner: false
+
+## MySQL subchart — enabled for local dev
+mysql:
+  enabled: true
+  auth:
+    rootPassword: fleetdm-root-pass
+    username: fleet
+    password: fleetdm-pass
+    database: fleet
+
+## Database connection pointing to the subchart
+database:
+  secretName: fleet-mysql
+  address: fleet-mysql:3306
+  database: fleet
+  username: fleet
+  passwordKey: mysql-password
+  maxOpenConns: 50
+  maxIdleConns: 50
+  connMaxLifetime: 0
+  tls:
+    enabled: false
+
+## Redis/Valkey subchart — enabled for local dev
+redis:
+  enabled: true
+
+valkey:
+  replica:
+    enabled: false
+  auth:
+    enabled: false
+
+## Cache connection pointing to the subchart
+cache:
+  address: fleet-valkey:6379
+  database: "0"
+  usePassword: false
+  secretName: redis
+  passwordKey: redis-password
+
+## Osquery — use stdout logging for local dev
+osquery:
+  secretName: osquery
+  nodeKeySize: 24
+  labelUpdateInterval: 30m
+  detailUpdateInterval: 30m
+  logging:
+    statusPlugin: stdout
+    resultPlugin: stdout
+
+## Disable GKE-specific features
+gke:
+  cloudSQL:
+    enableProxy: false
+  ingress:
+    useManagedCertificate: false
+    useGKEIngress: false
+    nodePort: 0
+  workloadIdentityEmail: ""
+
+## Ingress disabled — we use NodePort + port-forward for local access
+ingress:
+  enabled: false
+
+## Environment variables
+environments:
+  FLEET_SERVER_PRIVATE_KEY: "3RkwwhPXjsYi0KprN/0m3HGGn3iM/rT5enEk91RLDPs="
+
+## Vulnerability processing disabled for local dev
+vulnProcessing:
+  dedicated: false
