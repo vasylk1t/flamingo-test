@@ -279,7 +279,7 @@ database:
 ## Section: cache
 # All of the connection settings for Redis
 cache:
-  address: 127.0.0.1:6379
+  address: 127.0.0.1:6379 
   database: "0"
   usePassword: false
   secretName: redis
