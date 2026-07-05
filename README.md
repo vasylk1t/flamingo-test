@@ -95,16 +95,15 @@ Osquery agents on the host can enroll using this URL as the Fleet server address
 
 ## Helm Chart Registry (CI)
 
-On every push to `main` that changes the chart, CI publishes to GHCR with three tags:
+On every push to `main` that changes the chart, CI publishes to GHCR with two tags:
 
 | Tag | Example | Description |
 |-----|---------|-------------|
 | Stable | `1.0.0` | Version from Chart.yaml |
 | Commit | `1.0.0-a3f8b2c` | Pinned to specific commit |
-| Latest | `latest` | Always the most recent build |
 
 ```bash
-helm install fleet oci://ghcr.io/vasylk1t/flamingo-test/fleet --version latest
+helm install fleet oci://ghcr.io/vasylk1t/flamingo-test/fleet --version 1.0.0
 ```
 
 ## Teardown

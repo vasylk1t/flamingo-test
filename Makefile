@@ -3,7 +3,7 @@ NAMESPACE       := fleet
 RELEASE_NAME    := fleet
 CHART_PATH      := ./fleet
 CHART_REGISTRY  := oci://ghcr.io/vasylk1t/flamingo-test/fleet
-CHART_VERSION   := latest
+CHART_VERSION   := 1.0.0
 VALUES_FILE     := values-local.yaml
 KIND_CONFIG     := kind-config.yaml
 

@@ -69,10 +69,3 @@ jobs:
           sed -i "s/^version:.*/version: ${{ steps.version.outputs.base }}-${{ steps.version.outputs.sha }}/" ./fleet/Chart.yaml
           helm package ./fleet
           helm push fleet-*.tgz oci://ghcr.io/${{ github.repository_owner }}/flamingo-test
-          rm -f fleet-*.tgz
-
-      - name: Push latest
-        run: |
-          sed -i "s/^version:.*/version: latest/" ./fleet/Chart.yaml
-          helm package ./fleet
-          helm push fleet-*.tgz oci://ghcr.io/${{ github.repository_owner }}/flamingo-test
