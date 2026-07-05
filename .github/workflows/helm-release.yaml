@@ -35,6 +35,8 @@ jobs:
     needs: lint
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: azure/setup-helm@v4
         with:
@@ -43,9 +45,34 @@ jobs:
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Build and push
+      - name: Build dependencies
         run: |
           helm repo add valkey https://valkey.io/valkey-helm/
           helm dependency build ./fleet
+
+      - name: Determine version
+        id: version
+        run: |
+          CHART_VERSION=$(grep '^version:' ./fleet/Chart.yaml | awk '{print $2}')
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "base=${CHART_VERSION}" >> $GITHUB_OUTPUT
+          echo "sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
+
+      - name: Push release version
+        run: |
+          helm package ./fleet
+          helm push fleet-*.tgz oci://ghcr.io/${{ github.repository_owner }}/flamingo-test
+          rm -f fleet-*.tgz
+
+      - name: Push SHA-tagged version
+        run: |
+          sed -i "s/^version:.*/version: ${{ steps.version.outputs.base }}-${{ steps.version.outputs.sha }}/" ./fleet/Chart.yaml
+          helm package ./fleet
+          helm push fleet-*.tgz oci://ghcr.io/${{ github.repository_owner }}/flamingo-test
+          rm -f fleet-*.tgz
+
+      - name: Push latest
+        run: |
+          sed -i "s/^version:.*/version: ${{ steps.version.outputs.base }}-latest/" ./fleet/Chart.yaml
           helm package ./fleet
           helm push fleet-*.tgz oci://ghcr.io/${{ github.repository_owner }}/flamingo-test
